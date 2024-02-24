@@ -1,0 +1,52 @@
+Option Explicit
+
+Sub OutlookAutomation()
+    Dim OutlookApp As Object
+    Dim MailItem As Object
+    Dim LastRow As Long
+    Dim i As Integer
+    Dim ActiveSheetName As String
+
+    ' Get the active sheet name
+    ActiveSheetName = ActiveSheet.Name
+
+    ' Create Outlook Application object
+    On Error Resume Next
+    Set OutlookApp = GetObject(, "Outlook.Application")
+    On Error GoTo 0
+
+    If OutlookApp Is Nothing Then
+        Set OutlookApp = CreateObject("Outlook.Application")
+    End If
+
+    LastRow = ThisWorkbook.Sheets(ActiveSheetName).Cells(ThisWorkbook.Sheets(ActiveSheetName).Rows.Count, "A").End(xlUp).Row
+
+    For i = 2 To LastRow
+        ' Create a new mail item
+        Set MailItem = OutlookApp.CreateItem(0) ' 0 represents olMailItem
+
+        With MailItem
+            ' Pick data from specific columns in the Excel sheet
+            .To = ThisWorkbook.Sheets(ActiveSheetName).Cells(i, 1).Value ' Assuming column A contains email addresses
+            .CC = ThisWorkbook.Sheets(ActiveSheetName).Cells(i, 2).Value ' Assuming column B contains CC addresses
+            .Subject = ThisWorkbook.Sheets(ActiveSheetName).Cells(i, 3).Value ' Assuming column C contains subjects
+            .Body = ThisWorkbook.Sheets(ActiveSheetName).Cells(i, 4).Value ' Assuming column D contains email body
+            
+            ' Check if there is a picture path in the column
+            Dim PicPath As String
+            PicPath = ThisWorkbook.Sheets(ActiveSheetName).Cells(i, 5).Value ' Assuming column E contains picture paths
+            If PicPath <> "" Then
+                ' Add attachment if PicPath is provided
+                .Attachments.Add PicPath
+            End If
+            
+            .Send ' Send the email without displaying
+        End With
+
+        ' Release object reference
+        Set MailItem = Nothing
+    Next i
+
+    ' Release Outlook Application object reference
+    Set OutlookApp = Nothing
+End Sub
